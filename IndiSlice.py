@@ -71,93 +71,31 @@ def GraphCreator(args):
         
         val_dict[kc] = dict(coord = temp_Y_coords, value = prop_values)
     
-    fig = go.Figure(frames=[go.Frame(
-            data = go.Surface(
-                    x = X_coords,
-                    y = Z_coords,
-                    z = val_dict[k]["coord"],
-                    surfacecolor = val_dict[k]["value"],
-                    coloraxis='coloraxis',
-                    cmin = properties[prop_name]["vmin"],
-                    cmax = properties[prop_name]["vmax"]
-                ),
-            name = str(k)
+        fig = go.Figure(go.Surface(
+                        x = X_coords,
+                        y = Z_coords,
+                        z = val_dict[kc]["coord"],
+                        surfacecolor = val_dict[kc]["value"],
+                        coloraxis='coloraxis',
+                        cmin = properties[prop_name]["vmin"],
+                        cmax = properties[prop_name]["vmax"]
+                ))
+        
+        fig.update_layout(
+            title_text = "Arbitrary Volume Slicing " + str(kc) ,
+            coloraxis=dict(
+                colorscale=properties[prop_name]["cmap"],
+            )
         )
-        for k in range(-5,5)])
-    
-    fig.add_trace(
-        go.Surface(
-            x = X_coords,
-            y = Z_coords,
-            z = val_dict[-5]["coord"],
-            surfacecolor = val_dict[-5]["value"],
-            coloraxis='coloraxis',
-            cmin = properties[prop_name]["vmin"],
-            cmax = properties[prop_name]["vmax"]
+        fig.update_layout(
+            scene=dict(
+                xaxis = dict(range=[0,600]),
+                yaxis = dict(range=[0,248]),
+                zaxis = dict(range=[0,248])),
+            width = 900,
+            height = 900
         )
-    )
-    def frame_args(duration):
-        return {
-                "frame": {"duration": duration, "redraw": True},
-                "mode": "immediate",
-                "fromcurrent": False,
-                "transition": {"duration": duration, "easing": "linear"},
-            }
-
-    sliders = [
-                {
-                    "pad": {"b": 10, "t": 60},
-                    "len": 0.9,
-                    "x": 1,
-                    "y": 0,
-                    "steps": [
-                        {
-                            "args": [[f.name], frame_args(0)],
-                            "label": str(k-5),
-                            "method": "animate",
-                        }
-                        for k, f in enumerate(fig.frames)
-                    ],
-                }
-            ]
-    
-    fig.update_layout(
-        title_text = "Arbitrary Volume Slicing",
-        coloraxis=dict(
-            colorscale=properties[prop_name]["cmap"],
-        )
-    )
-    fig.update_layout(
-        scene=dict(
-            xaxis = dict(range=[0,600]),
-            yaxis = dict(range=[0,248]),
-            zaxis = dict(range=[0,248])),
-        width = 900,
-        height = 900,
-        updatemenus = [
-            {
-                "buttons": [
-                    {
-                        "args": [None, frame_args(12)],
-                        "label": "&#9654;", # play symbol
-                        "method": "animate",
-                    },
-                    {
-                        "args": [[None], frame_args(0)],
-                        "label": "&#9724;", # pause symbol
-                        "method": "animate",
-                    },
-                ],
-                "direction": "left",
-                "pad": {"r": 10, "t": 70},
-                "type": "buttons",
-                "x": 0.1,
-                "y": 0,
-            }
-        ],
-        sliders = sliders
-    )
-    fig.show()
+        fig.show()
 
 def SliceExtractor(timestep, prop_name, planeEq):   
     arguments = []

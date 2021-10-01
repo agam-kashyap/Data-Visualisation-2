@@ -1,53 +1,133 @@
-import numpy as np
 import plotly.graph_objects as go
 
-def get_the_slice(x,y,z, surfacecolor):
-    return go.Surface(x=x,
-                      y=y,
-                      z=z,
-                      surfacecolor=surfacecolor,
-                      coloraxis='coloraxis')
+import pandas as pd
+
+url = "https://raw.githubusercontent.com/plotly/datasets/master/gapminderDataFiveYear.csv"
+dataset = pd.read_csv(url)
+
+years = ["1952", "1962", "1967", "1972", "1977", "1982", "1987", "1992", "1997", "2002",
+         "2007"]
+
+# make list of continents
+continents = []
+for continent in dataset["continent"]:
+    if continent not in continents:
+        continents.append(continent)
+# make figure
+fig_dict = {
+    "data": [],
+    "layout": {},
+    "frames": []
+}
+
+# fill in most of layout
+fig_dict["layout"]["xaxis"] = {"range": [30, 85], "title": "Life Expectancy"}
+fig_dict["layout"]["yaxis"] = {"title": "GDP per Capita", "type": "log"}
+fig_dict["layout"]["hovermode"] = "closest"
+fig_dict["layout"]["updatemenus"] = [
+    {
+        "buttons": [
+            {
+                "args": [None, {"frame": {"duration": 500, "redraw": False},
+                                "fromcurrent": True, "transition": {"duration": 300,
+                                                                    "easing": "quadratic-in-out"}}],
+                "label": "Play",
+                "method": "animate"
+            },
+            {
+                "args": [[None], {"frame": {"duration": 0, "redraw": False},
+                                  "mode": "immediate",
+                                  "transition": {"duration": 0}}],
+                "label": "Pause",
+                "method": "animate"
+            }
+        ],
+        "direction": "left",
+        "pad": {"r": 10, "t": 87},
+        "showactive": False,
+        "type": "buttons",
+        "x": 0.1,
+        "xanchor": "right",
+        "y": 0,
+        "yanchor": "top"
+    }
+]
+
+sliders_dict = {
+    "active": 0,
+    "yanchor": "top",
+    "xanchor": "left",
+    "currentvalue": {
+        "font": {"size": 20},
+        "prefix": "Year:",
+        "visible": True,
+        "xanchor": "right"
+    },
+    "transition": {"duration": 300, "easing": "cubic-in-out"},
+    "pad": {"b": 10, "t": 50},
+    "len": 0.9,
+    "x": 0.1,
+    "y": 0,
+    "steps": []
+}
+
+# make data
+year = 1952
+for continent in continents:
+    dataset_by_year = dataset[dataset["year"] == year]
+    dataset_by_year_and_cont = dataset_by_year[
+        dataset_by_year["continent"] == continent]
+
+    data_dict = {
+        "x": list(dataset_by_year_and_cont["lifeExp"]),
+        "y": list(dataset_by_year_and_cont["gdpPercap"]),
+        "mode": "markers",
+        "text": list(dataset_by_year_and_cont["country"]),
+        "marker": {
+            "sizemode": "area",
+            "sizeref": 200000,
+            "size": list(dataset_by_year_and_cont["pop"])
+        },
+        "name": continent
+    }
+    fig_dict["data"].append(data_dict)
+
+# make frames
+for year in years:
+    frame = {"data": [], "name": str(year)}
+    for continent in continents:
+        dataset_by_year = dataset[dataset["year"] == int(year)]
+        dataset_by_year_and_cont = dataset_by_year[
+            dataset_by_year["continent"] == continent]
+
+        data_dict = {
+            "x": list(dataset_by_year_and_cont["lifeExp"]),
+            "y": list(dataset_by_year_and_cont["gdpPercap"]),
+            "mode": "markers",
+            "text": list(dataset_by_year_and_cont["country"]),
+            "marker": {
+                "sizemode": "area",
+                "sizeref": 200000,
+                "size": list(dataset_by_year_and_cont["pop"])
+            },
+            "name": continent
+        }
+        frame["data"].append(data_dict)
+
+    fig_dict["frames"].append(frame)
+    slider_step = {"args": [
+        [year],
+        {"frame": {"duration": 300, "redraw": False},
+         "mode": "immediate",
+         "transition": {"duration": 300}}
+    ],
+        "label": year,
+        "method": "animate"}
+    sliders_dict["steps"].append(slider_step)
 
 
-def get_lims_colors(surfacecolor):# color limits for a slice
-    return np.min(surfacecolor), np.max(surfacecolor)
+fig_dict["layout"]["sliders"] = [sliders_dict]
 
-scalar_f = lambda x,y,z: x*np.exp(-x**2-y**2-z**2)
+fig = go.Figure(fig_dict)
 
-
-x = np.linspace(-2,2, 50)
-y = np.linspace(-2,2, 50)
-x, y = np.meshgrid(x,y)
-z = np.zeros(x.shape)
-surfcolor_z = scalar_f(x,y,z)
-sminz, smaxz = get_lims_colors(surfcolor_z)
-
-slice_z = get_the_slice(x, y, z, surfcolor_z)
-
-x = np.linspace(-2,2, 50)
-z = np.linspace(-2,2, 50)
-x, z = np.meshgrid(x,y)
-y = -0.5 * np.ones(x.shape)
-surfcolor_y = scalar_f(x,y,z)
-sminy, smaxy = get_lims_colors(surfcolor_y)
-vmin = min([sminz, sminy])
-vmax = max([smaxz, smaxy])
-slice_y = get_the_slice(x, y, z, surfcolor_y)
-
-def colorax(vmin, vmax):
-    return dict(cmin=vmin,
-                cmax=vmax)
-
-fig1 = go.Figure(data=[slice_z, slice_y])
-fig1.update_layout(
-         title_text='Slices in volumetric data', 
-         title_x=0.5,
-         width=700,
-         height=700,
-         scene_zaxis_range=[-2,2], 
-         coloraxis=dict(colorscale='BrBG',
-                        colorbar_thickness=25,
-                        colorbar_len=0.75,
-                        **colorax(vmin, vmax)))            
-      
-fig1.show()
+fig.show()
