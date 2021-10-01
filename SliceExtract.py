@@ -71,7 +71,9 @@ def GraphCreator(args):
         
         val_dict[kc] = dict(coord = temp_Y_coords, value = prop_values)
     
-    fig = go.Figure(frames=[go.Frame(
+    frames = []
+    for k in range(-5,5):
+        fr = go.Frame(
             data = go.Surface(
                     x = X_coords,
                     y = Z_coords,
@@ -83,13 +85,15 @@ def GraphCreator(args):
                 ),
             name = str(k)
         )
-        for k in range(-5,5)])
+        frames.append(fr)
+    
+    fig = go.Figure(frames=frames)
     
     fig.add_trace(
         go.Surface(
             x = X_coords,
             y = Z_coords,
-            z = val_dict[-5]["coord"],
+            z = val_dict[0]["coord"],
             surfacecolor = val_dict[-5]["value"],
             coloraxis='coloraxis',
             cmin = properties[prop_name]["vmin"],
@@ -98,17 +102,17 @@ def GraphCreator(args):
     )
     def frame_args(duration):
         return {
-                "frame": {"duration": duration, "redraw": True},
+                "frame": {"duration": duration},
                 "mode": "immediate",
-                "fromcurrent": False,
-                "transition": {"duration": duration, "easing": "linear"},
+                "fromcurrent": True,
+                # "transition": {"duration": duration, "easing": "linear"},
             }
 
     sliders = [
                 {
                     "pad": {"b": 10, "t": 60},
                     "len": 0.9,
-                    "x": 1,
+                    "x": 0.1,
                     "y": 0,
                     "steps": [
                         {
@@ -131,14 +135,15 @@ def GraphCreator(args):
         scene=dict(
             xaxis = dict(range=[0,600]),
             yaxis = dict(range=[0,248]),
-            zaxis = dict(range=[0,248])),
+            zaxis = dict(range=[0,248])
+            ),
         width = 900,
         height = 900,
         updatemenus = [
             {
                 "buttons": [
                     {
-                        "args": [None, frame_args(12)],
+                        "args": [None, frame_args(50)],
                         "label": "&#9654;", # play symbol
                         "method": "animate",
                     },

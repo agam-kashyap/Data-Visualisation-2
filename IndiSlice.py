@@ -46,6 +46,8 @@ def GraphCreator(args):
 
     val_dict = dict()
 
+    frames = []
+
     k_change = planeEq[3]/2
     for kc in range(-5,5):
         temp_planeEq = planeEq.copy()
@@ -71,7 +73,7 @@ def GraphCreator(args):
         
         val_dict[kc] = dict(coord = temp_Y_coords, value = prop_values)
     
-        fig = go.Figure(go.Surface(
+        frame = go.Frame(data = go.Surface(
                         x = X_coords,
                         y = Z_coords,
                         z = val_dict[kc]["coord"],
@@ -79,23 +81,84 @@ def GraphCreator(args):
                         coloraxis='coloraxis',
                         cmin = properties[prop_name]["vmin"],
                         cmax = properties[prop_name]["vmax"]
-                ))
-        
-        fig.update_layout(
-            title_text = "Arbitrary Volume Slicing " + str(kc) ,
-            coloraxis=dict(
-                colorscale=properties[prop_name]["cmap"],
-            )
+                ),
+                name = str(kc))
+        frames.append(frame)
+    
+    fig = go.Figure(frames=frames) 
+    fig.add_trace(
+        go.Surface(
+            x = X_coords,
+            y = Z_coords,
+            z = val_dict[0]["coord"],
+            surfacecolor = val_dict[0]["value"],
+            coloraxis='coloraxis',
+            cmin = properties[prop_name]["vmin"],
+            cmax = properties[prop_name]["vmax"]
         )
-        fig.update_layout(
-            scene=dict(
-                xaxis = dict(range=[0,600]),
-                yaxis = dict(range=[0,248]),
-                zaxis = dict(range=[0,248])),
-            width = 900,
-            height = 900
+    )
+    fig.update_layout(
+        title_text = "Arbitrary Volume Slicing " + str(kc) ,
+        coloraxis=dict(
+            colorscale=properties[prop_name]["cmap"],
         )
-        fig.show()
+    )
+    
+    def frame_args(duration):
+        return {
+                "frame": {"duration": duration},
+                "mode": "immediate",
+                "fromcurrent": True,
+                "transition": {"duration": duration, "easing": "linear"},
+            }
+
+    sliders = [
+                {
+                    "pad": {"b": 10, "t": 60},
+                    "len": 0.9,
+                    "x": 0.1,
+                    "y": 0,
+                    "steps": [
+                        {
+                            "args": [[f.name], frame_args(0)],
+                            "label": str(k),
+                            "method": "animate",
+                        }
+                        for k, f in enumerate(fig.frames)
+                    ],
+                }
+            ]
+    fig.update_layout(
+        scene=dict(
+            xaxis = dict(range=[0,600]),
+            yaxis = dict(range=[0,248]),
+            zaxis = dict(range=[0,248])),
+        width = 900,
+        height = 900,
+         updatemenus = [
+            {
+                "buttons": [
+                    {
+                        "args": [None, frame_args(50)],
+                        "label": "&#9654;", # play symbol
+                        "method": "animate",
+                    },
+                    {
+                        "args": [[None], frame_args(0)],
+                        "label": "&#9724;", # pause symbol
+                        "method": "animate",
+                    },
+                ],
+                "direction": "left",
+                "pad": {"r": 10, "t": 70},
+                "type": "buttons",
+                "x": 0.1,
+                "y": 0,
+            }
+         ],
+         sliders=sliders
+    )
+    fig.show()
 
 def SliceExtractor(timestep, prop_name, planeEq):   
     arguments = []
