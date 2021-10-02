@@ -67,7 +67,7 @@ def graph_creator(args):
     Z_grid, X_grid = np.mgrid[0:Z, 0:X]
     
     fig, ax = plt.subplots(nrows=1, figsize=(10,8))
-    ax.set_title("Velocity Quiver with Temp Colormap XZ "+timestep+ " slice125", fontsize=15)
+    ax.set_title("Streamline plot of the Velocity - XZ "+timestep+ " slice125", fontsize=15)
     f = ax.streamplot(X_grid, Z_grid, np.array(data_1), np.array(data_2), density=1)
     ax.set_xlabel('X position($10^{-3}$ parsecs)', fontsize=10)
     ax.set_ylabel('Z position($10^{-3}$ parsecs)', fontsize=10)

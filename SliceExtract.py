@@ -19,6 +19,8 @@ def GraphCreator(args):
     timestep = args[0].split(".")[1]
     prop_name = args[1]
     planeEq = args[2]
+    norm_min, norm_max = args[3]
+
     selected_property = []
 
     vmin = 100000007
@@ -46,8 +48,10 @@ def GraphCreator(args):
 
     val_dict = dict()
 
-    k_change = planeEq[3]/2
-    for kc in range(-5,5):
+    frames = []
+
+    k_change = planeEq[3]/10
+    for kc in range(norm_min, norm_max):
         temp_planeEq = planeEq.copy()
         temp_planeEq[3] += kc*k_change
 
@@ -71,41 +75,43 @@ def GraphCreator(args):
         
         val_dict[kc] = dict(coord = temp_Y_coords, value = prop_values)
     
-    frames = []
-    for k in range(-5,5):
-        fr = go.Frame(
-            data = go.Surface(
-                    x = X_coords,
-                    y = Z_coords,
-                    z = val_dict[k]["coord"],
-                    surfacecolor = val_dict[k]["value"],
-                    coloraxis='coloraxis',
-                    cmin = properties[prop_name]["vmin"],
-                    cmax = properties[prop_name]["vmax"]
+        frame = go.Frame(data = go.Surface(
+                        x = X_coords,
+                        y = Z_coords,
+                        z = val_dict[kc]["coord"],
+                        surfacecolor = val_dict[kc]["value"],
+                        coloraxis='coloraxis',
+                        cmin = properties[prop_name]["vmin"],
+                        cmax = properties[prop_name]["vmax"]
                 ),
-            name = str(k)
-        )
-        frames.append(fr)
+                name = str(kc))
+        frames.append(frame)
     
-    fig = go.Figure(frames=frames)
-    
+    fig = go.Figure(frames=frames) 
     fig.add_trace(
         go.Surface(
             x = X_coords,
             y = Z_coords,
-            z = val_dict[0]["coord"],
-            surfacecolor = val_dict[-5]["value"],
+            z = val_dict[norm_min]["coord"],
+            surfacecolor = val_dict[norm_min]["value"],
             coloraxis='coloraxis',
             cmin = properties[prop_name]["vmin"],
             cmax = properties[prop_name]["vmax"]
         )
     )
+    fig.update_layout(
+        title_text = "Arbitrary Volume Slicing " + str(planeEq[0]) + "x + " + str(planeEq[1]) + "y +" + str(planeEq[2]) + "z = k" ,
+        coloraxis=dict(
+            colorscale=properties[prop_name]["cmap"],
+        )
+    )
+    
     def frame_args(duration):
         return {
                 "frame": {"duration": duration},
                 "mode": "immediate",
                 "fromcurrent": True,
-                # "transition": {"duration": duration, "easing": "linear"},
+                "transition": {"duration": duration, "easing": "linear"},
             }
 
     sliders = [
@@ -117,29 +123,21 @@ def GraphCreator(args):
                     "steps": [
                         {
                             "args": [[f.name], frame_args(0)],
-                            "label": str(k-5),
+                            "label": str(k+norm_min),
                             "method": "animate",
                         }
                         for k, f in enumerate(fig.frames)
                     ],
                 }
             ]
-    
-    fig.update_layout(
-        title_text = "Arbitrary Volume Slicing",
-        coloraxis=dict(
-            colorscale=properties[prop_name]["cmap"],
-        )
-    )
     fig.update_layout(
         scene=dict(
             xaxis = dict(range=[0,600]),
             yaxis = dict(range=[0,248]),
-            zaxis = dict(range=[0,248])
-            ),
+            zaxis = dict(range=[0,248])),
         width = 900,
         height = 900,
-        updatemenus = [
+         updatemenus = [
             {
                 "buttons": [
                     {
@@ -159,12 +157,12 @@ def GraphCreator(args):
                 "x": 0.1,
                 "y": 0,
             }
-        ],
-        sliders = sliders
+         ],
+         sliders=sliders
     )
     fig.show()
 
-def SliceExtractor(timestep, prop_name, planeEq):   
+def SliceExtractor(timestep, prop_name, planeEq, minLim, maxLim):   
     arguments = []
     tsep = ""
     if(timestep < 100): tstep = "0" + str(timestep)
@@ -175,6 +173,7 @@ def SliceExtractor(timestep, prop_name, planeEq):
     temp_list.append(filename)
     temp_list.append(prop_name)
     temp_list.append(planeEq)
+    temp_list.append([minLim, maxLim])
 
     arguments.append(temp_list)
 
@@ -217,10 +216,6 @@ planeEq_2 = GetPlaneEq(Point1, Point2, Point3)
 
 print(planeEq_2)
 
-# This Works -> Just changing the K value gives us a parallel plane
-pp_planeEq_2 = planeEq_2.copy()
-pp_planeEq_2[3] += 7225000 
-
 # Example 3: Plane Parallel to XZ plane
 Point1 = [0,100,0]
 Point2 = [0,100,247]
@@ -229,5 +224,5 @@ planeEq_3 = GetPlaneEq(Point1, Point2, Point3)
 
 # print(planeEq_3)
 
-SliceExtractor(60, "density", planeEq_2)
-# SliceExtractor(60, "density", pp_planeEq_2)
+# SliceExtractor(60, "density", planeEq_2, -10, 20)
+SliceExtractor(60, "density", planeEq_1, -10, 20)

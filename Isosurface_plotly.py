@@ -54,7 +54,7 @@ def graph_creator(args):
         value=values.flatten(),
         isomin = vmin + 1000,
         isomax = vmax - 10000,
-        opacity=0.1, # needs to be small to see through all surfaces
+        opacity=0.50, # needs to be small to see through all surfaces
         surface_count=5, # needs to be a large number for good volume rendering
         ))
     fig.update_layout(
@@ -62,8 +62,8 @@ def graph_creator(args):
         xaxis = dict(range=[0,600]),
         yaxis = dict(range=[0,248]),
         zaxis = dict(range=[slice[0],slice[-1]])),
-        width=700,
-        height=700)
+        width=1000,
+        height=1000)
     fig.update_layout(scene_aspectmode='data')
     fig.show()       
 
