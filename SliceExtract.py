@@ -132,9 +132,9 @@ def GraphCreator(args):
             ]
     fig.update_layout(
         scene=dict(
-            xaxis = dict(range=[0,600]),
-            yaxis = dict(range=[0,248]),
-            zaxis = dict(range=[0,248])),
+            xaxis = dict(range=[0,600], title="X position"),
+            yaxis = dict(range=[0,248], title="Z position"),
+            zaxis = dict(range=[0,248], title="Y position")),
         width = 900,
         height = 900,
          updatemenus = [
@@ -224,5 +224,5 @@ planeEq_3 = GetPlaneEq(Point1, Point2, Point3)
 
 # print(planeEq_3)
 
-# SliceExtractor(60, "density", planeEq_2, -10, 20)
-SliceExtractor(60, "density", planeEq_1, -10, 20)
+SliceExtractor(60, "density", planeEq_2, -10, 20)
+# SliceExtractor(60, "density", planeEq_1, -10, 20)
